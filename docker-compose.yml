@@ -1,0 +1,97 @@
+services:
+
+  eureka-service:
+    build: ./eureka-service
+    container_name: eureka-service
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME=eureka-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka/
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/eureka/apps || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka/
+      - JWT_SECRET=a98ba831524d428bdb59b2a9342de0716eaa901463593fb888e58001f522c74d
+    depends_on:
+      eureka-service:
+        condition: service_healthy
+
+  mysql-auth:
+    image: mysql:8.0
+    container_name: mysql-auth
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_auth
+    volumes:
+      - mysql-auth-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-auth:3306/db_auth?createDatabaseIfNotExist=true
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - JWT_SECRET=a98ba831524d428bdb59b2a9342de0716eaa901463593fb888e58001f522c74d
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka/
+    depends_on:
+      mysql-auth:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+
+  mysql-inventario:
+    image: mysql:8.0
+    container_name: mysql-inventario
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ms_inventario
+    volumes:
+      - mysql-inventario-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  inventario-service:
+    build: ./inventario-service
+    container_name: inventario-service
+    ports:
+      - "8091:8091"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-inventario:3306/ms_inventario?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - JWT_SECRET=a98ba831524d428bdb59b2a9342de0716eaa901463593fb888e58001f522c74d
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka/
+    depends_on:
+      mysql-inventario:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+
+volumes:
+  mysql-auth-data:
+  mysql-inventario-data:

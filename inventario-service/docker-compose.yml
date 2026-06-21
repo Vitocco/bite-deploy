@@ -1,0 +1,14 @@
+services:
+  mysql-inventario:
+    image: mysql:8.0
+    container_name: mysql-inventario
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ms_inventario
+    volumes:
+      - mysql-inventario-data:/var/lib/mysql
+
+volumes:
+  mysql-inventario-data:

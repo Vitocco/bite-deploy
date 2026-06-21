@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: auth-service
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - StripPrefix=1
+            - id: menu-service
+              uri: lb://MENU-SERVICE
+              predicates:
+                - Path=/api/menu/**
+              filters:
+                - StripPrefix=1
+            - id: inventario-service
+              uri: lb://INVENTARIO-SERVICE
+              predicates:
+                - Path=/api/inventario/**
+              filters:
+                - StripPrefix=1
+            - id: reserva-service
+              uri: lb://RESERVA-SERVICE
+              predicates:
+                - Path=/api/reserva/**
+              filters:
+                - StripPrefix=1
+            - id: pago-service
+              uri: lb://PAGO-SERVICE
+              predicates:
+                - Path=/api/pago/**
+              filters:
+                - StripPrefix=1
+            - id: pedido-service
+              uri: lb://PEDIDO-SERVICE
+              predicates:
+                - Path=/api/pedido/**
+              filters:
+                - StripPrefix=1
+            - id: usuario-service
+              uri: lb://USUARIO-SERVICE
+              predicates:
+                - Path=/api/usuario/**
+              filters:
+                - StripPrefix=1
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: a98ba831524d428bdb59b2a9342de0716eaa901463593fb888e58001f522c74d
+  expiration: 86400000
+
+logging:
+  level:
+    com.nativa.api_gateway: DEBUG
